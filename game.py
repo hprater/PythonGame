@@ -5,14 +5,14 @@ from pygame.locals import *
 from time import sleep
 
 
-class Model():
+class Model:
     def __init__(self):
         self.dest_x = 0
         self.dest_y = 0
         self.turtle = Turtle(0,0)
         self.sprites = []
-        self.lettuce = Lettuce(500, 500)
-        self.sprites.append(self.lettuce)
+        # self.lettuce = Lettuce(500, 500)
+        # self.sprites.append(self.lettuce)
         self.sprites.append(self.turtle)
 
     def update(self):
@@ -30,11 +30,11 @@ class Model():
         self.dest_y = pos[1]
 
 
-class View():
+class View:
     def __init__(self, model):
         screen_size = (800, 600)
-        self.screen = pygame.display.set_mode(screen_size, 32)
-        self.turtle_image = pygame.image.load("images/link-down1.png")
+        self.screen = pygame.display.set_mode(screen_size, 32)  # main pygame surface
+        self.turtle_image = pygame.image.load("images/link-down1.png").convert()
         self.model = model
         self.model.rect = self.turtle_image.get_rect()
 
@@ -44,7 +44,7 @@ class View():
         pygame.display.flip()
 
 
-class Controller():
+class Controller:
     def __init__(self, model):
         self.model = model
         self.keep_going = True
@@ -69,8 +69,8 @@ class Controller():
             self.model.dest_y += 1
 
 
-class Sprite():
-    def __int__(self, xPos, yPos, width, height, im):
+class Sprite:
+    def __init__(self, xPos, yPos, width, height, im):
         self.x = xPos
         self.y = yPos
         self.w = width
@@ -80,7 +80,7 @@ class Sprite():
 
 class Turtle(Sprite):
     def __init__(self, xPos, yPos):
-        super(Turtle, self).__init__(xPos, yPos, 80, 59, "turtle.png")
+        super().__init__(xPos, yPos, 80, 59, "images/link-down1.png")  # xPos, yPos, 80, 59, "turtle.png"
         # self.x = xPos
         # self.y = yPos
         # self.w = 80
@@ -90,7 +90,7 @@ class Turtle(Sprite):
 
 class Brick(Sprite):
     def __init__(self, xPos, yPos):
-        super(Brick, self).__init__(xPos, yPos, 100, 100, "brick.png")
+        super(Brick, self).__init__(xPos, yPos, 100, 100, "images/brick.png")
 
 
 print("Use the arrow keys to move. Press Esc to quit.")
