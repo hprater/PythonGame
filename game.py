@@ -34,13 +34,15 @@ class View:
     def __init__(self, model):
         screen_size = (800, 600)
         self.screen = pygame.display.set_mode(screen_size, 32)  # main pygame surface
+        # pygame optimized image with convert (but removes transparency)
         self.turtle_image = pygame.image.load("images/link-down1.png").convert()
+        pygame.Surface.set_colorkey(self.turtle_image, [0, 0, 0])  # makes the black from convert transparent again
         self.model = model
         self.model.rect = self.turtle_image.get_rect()
 
     def update(self):
         self.screen.fill([0, 200, 100])
-        # self.screen.blit(self.turtle_image, self.model.rect)
+        self.screen.blit(self.turtle_image, self.model.rect)
         pygame.display.flip()
 
 
