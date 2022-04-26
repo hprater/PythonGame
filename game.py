@@ -17,13 +17,13 @@ class Model():
 
     def update(self):
         if self.rect.left < self.dest_x:
-            self.rect.left += 1
+            self.rect.left += 2
         if self.rect.left > self.dest_x:
-            self.rect.left -= 1
+            self.rect.left -= 2
         if self.rect.top < self.dest_y:
-            self.rect.top += 1
+            self.rect.top += 2
         if self.rect.top > self.dest_y:
-            self.rect.top -= 1
+            self.rect.top -= 2
 
     def set_dest(self, pos):
         self.dest_x = pos[0]
@@ -34,7 +34,7 @@ class View():
     def __init__(self, model):
         screen_size = (800, 600)
         self.screen = pygame.display.set_mode(screen_size, 32)
-        self.turtle_image = pygame.image.load("turtle.png")
+        self.turtle_image = pygame.image.load("images/link-down1.png")
         self.model = model
         self.model.rect = self.turtle_image.get_rect()
 
