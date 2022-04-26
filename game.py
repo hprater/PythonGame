@@ -9,6 +9,11 @@ class Model():
     def __init__(self):
         self.dest_x = 0
         self.dest_y = 0
+        self.turtle = Turtle(0,0)
+        self.sprites = []
+        self.lettuce = Lettuce(500, 500)
+        self.sprites.append(self.lettuce)
+        self.sprites.append(self.turtle)
 
     def update(self):
         if self.rect.left < self.dest_x:
@@ -35,7 +40,7 @@ class View():
 
     def update(self):
         self.screen.fill([0, 200, 100])
-        self.screen.blit(self.turtle_image, self.model.rect)
+        # self.screen.blit(self.turtle_image, self.model.rect)
         pygame.display.flip()
 
 
@@ -62,6 +67,30 @@ class Controller():
             self.model.dest_y -= 1
         if keys[K_DOWN]:
             self.model.dest_y += 1
+
+
+class Sprite():
+    def __int__(self, xPos, yPos, width, height, im):
+        self.x = xPos
+        self.y = yPos
+        self.w = width
+        self.h = height
+        self.image = pygame.image.load(im)
+
+
+class Turtle(Sprite):
+    def __init__(self, xPos, yPos):
+        super(Turtle, self).__init__(xPos, yPos, 80, 59, "turtle.png")
+        # self.x = xPos
+        # self.y = yPos
+        # self.w = 80
+        # self.h = 59
+        # self.image = pygame.image.load("turtle.png")
+
+
+class Brick(Sprite):
+    def __init__(self, xPos, yPos):
+        super(Brick, self).__init__(xPos, yPos, 100, 100, "brick.png")
 
 
 print("Use the arrow keys to move. Press Esc to quit.")
