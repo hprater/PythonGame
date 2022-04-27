@@ -88,10 +88,10 @@ class Brick(pg.sprite.Sprite):
     speed = 0
     images = []
 
-    def __init__(self):
+    def __init__(self, x, y):
         pg.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
-        self.rect = self.image.get_rect(topright=SCREENRECT.topright)
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.frame = 0
 
     def update(self):
@@ -194,7 +194,9 @@ def main():
     # initialize our starting sprites
     # global SCORE
     player = Player()
-    Brick()  # note, this 'lives' because it goes into a sprite group
+    Brick(0, 0)  # note, this 'lives' because it goes into a sprite group
+    Brick(0, 50)  # note, this 'lives' because it goes into a sprite group
+    Brick(50, 0)  # note, this 'lives' because it goes into a sprite group
 
     # Run our main loop whilst the player is alive.
     while player.alive():
@@ -219,8 +221,8 @@ def main():
         player.move(direction)
 
         # Detect collisions between bricks and player.
-        for _ in pg.sprite.spritecollide(player, bricks, 1):
-            player.kill()
+        for _ in pg.sprite.spritecollide(player, bricks, False):
+            player.move(-direction)
 
         # See if alien boms hit the player.
         # for bomb in pg.sprite.spritecollide(player, bombs, 1):
