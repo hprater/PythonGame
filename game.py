@@ -9,11 +9,11 @@ class Model:
     def __init__(self):
         self.dest_x = 0
         self.dest_y = 0
-        self.turtle = Turtle(0,0)
+        self.character = Character(0, 0)
         self.sprites = []
         # self.lettuce = Lettuce(500, 500)
         # self.sprites.append(self.lettuce)
-        self.sprites.append(self.turtle)
+        self.sprites.append(self.character)
 
     def update(self):
         if self.rect.left < self.dest_x:
@@ -35,14 +35,14 @@ class View:
         screen_size = (800, 600)
         self.screen = pygame.display.set_mode(screen_size, 32)  # main pygame surface
         # pygame optimized image with convert (but removes transparency)
-        self.turtle_image = pygame.image.load("images/link-down1.png").convert()
-        pygame.Surface.set_colorkey(self.turtle_image, [0, 0, 0])  # makes the black from convert transparent again
+        self.character_image = pygame.image.load("images/link-down1.png").convert()
+        pygame.Surface.set_colorkey(self.character_image, [0, 0, 0])  # makes the black from convert transparent again
         self.model = model
-        self.model.rect = self.turtle_image.get_rect()
+        self.model.rect = self.character_image.get_rect()
 
     def update(self):
         self.screen.fill([0, 200, 100])
-        self.screen.blit(self.turtle_image, self.model.rect)
+        self.screen.blit(self.character_image, self.model.rect)
         pygame.display.flip()
 
 
@@ -80,7 +80,7 @@ class Sprite:
         self.image = pygame.image.load(im)
 
 
-class Turtle(Sprite):
+class Character(Sprite):
     def __init__(self, xPos, yPos):
         super().__init__(xPos, yPos, 80, 59, "images/link-down1.png")  # xPos, yPos, 80, 59, "turtle.png"
         # self.x = xPos
