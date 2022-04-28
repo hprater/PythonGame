@@ -176,12 +176,12 @@ def main():
     # initialize our starting sprites
     # global SCORE
     player = Player()
-    Brick(0, 0)  # note, this 'lives' because it goes into a sprite group
-    Brick(0, 50)  # note, this 'lives' because it goes into a sprite group
-    Brick(0, 100)  # note, this 'lives' because it goes into a sprite group
-    Brick(750, 0)  # note, this 'lives' because it goes into a sprite group
-    Brick(750, 50)  # note, this 'lives' because it goes into a sprite group
-    Brick(750, 100)  # note, this 'lives' because it goes into a sprite group
+    Brick(0, 0)  # note, these 'live' because it goes into a sprite group
+    Brick(0, 50)
+    Brick(0, 100)
+    Brick(750, 0)
+    Brick(750, 50)
+    Brick(750, 100)
     Pot(200, 75)
 
     # Run our main loop whilst the player is alive.
@@ -189,21 +189,21 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
-            if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+            if event.type == pg.KEYDOWN and (event.key == pg.K_ESCAPE or event.key == pg.K_q):
                 return
             if event.type == pg.KEYDOWN:
                 if event.key in dir:
                     v = dir[event.key]
                     player.move(v)
             if event.type == pg.KEYUP:
-                if event.key in dir:
+                if event.key in dir and player.current_direction != (0, 0):
                     v = anti_dir[event.key]
                     player.move(v)
         everyone.clear(screen, background)
         everyone.update()
 
         for _ in pg.sprite.spritecollide(player, bricks, False):
-            player.move((0, 0))
+            player.current_direction = (0, 0)
 
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
