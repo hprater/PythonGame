@@ -1,32 +1,10 @@
 #!/usr/bin/env python
-""" pygame.examples.aliens
-
-Shows a mini game where you have to defend against aliens.
-
-What does it show you about pygame?
-
-* pg.sprite, the difference between Sprite and Group.
-* dirty rectangle optimization for processing for speed.
-* music with pg.mixer.music, including fadeout
-* sound effects with pg.Sound
-* event processing, keyboard handling, QUIT handling.
-* a main loop frame limited with a game clock from pg.time.Clock
-* fullscreen switching.
-
-
-Controls
---------
-
-* Left and right arrows to move.
-* Space bar to shoot
-* f key to toggle between fullscreen.
-
-"""
 
 import random
 import os
 
 import pygame as pg
+from pygame import K_LEFT, K_RIGHT, K_UP, K_DOWN
 
 if not pg.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
@@ -35,6 +13,8 @@ if not pg.image.get_extended():
 SCREENRECT = pg.Rect(0, 0, 800, 600)
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
+dir = {K_LEFT: (-1, 0), K_RIGHT: (1, 0), K_UP: (0, -1), K_DOWN: (0, 1)}
+anti_dir = {K_LEFT: (1, 0), K_RIGHT: (-1, 0), K_UP: (0, 1), K_DOWN: (0, -1)}
 
 
 def load_image(file):
@@ -48,22 +28,15 @@ def load_image(file):
     return surface.convert()
 
 
-# Each type of game object gets an init and an update function.
-# The update function is called once per frame, and it is when each object should
-# change its current position and state.
-#
-# The Player object actually gets a "move" function instead of update,
-# since it is passed extra information about the keyboard.
-
-
 class Player(pg.sprite.Sprite):
     speed = 5
     bounce = 24
+    animation_cycle = 12
     right_images = []
     left_images = []
     up_images = []
     down_images = []
-    current_direction = None
+    current_direction = (0, 0)
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self, self.containers)
@@ -71,19 +44,15 @@ class Player(pg.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=(55, 55))
         self.reloading = 0
         self.origtop = self.rect.top
+        self.frame = 0
         self.facing = -1
 
-    def move(self, direction):
-        if direction:
-            self.facing = direction
-        self.rect.move_ip(direction * self.speed, 0)
+    def update(self):
+        self.rect.move_ip(self.current_direction[0] * self.speed, self.current_direction[1] * self.speed)
         self.rect = self.rect.clamp(SCREENRECT)
-        self.current_direction = direction
-        if direction < 0:
-            self.image = self.down_images[0]
-        elif direction > 0:
-            self.image = self.down_images[1]
-        self.rect.top = self.origtop - (self.rect.left // self.bounce % 2)
+
+    def move(self, direction):
+        self.current_direction = (self.current_direction[0] + direction[0], self.current_direction[1] + direction[1])
 
 
 class Brick(pg.sprite.Sprite):
@@ -129,7 +98,7 @@ class Pot(pg.sprite.Sprite):
 
     def update(self):
         if self.direction is not None:
-            self.rect.move_ip(self.direction * self.speed, 0)
+            self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
             self.rect = self.rect.clamp(SCREENRECT)
 
     def move(self, direction):
@@ -157,8 +126,8 @@ def main():
 
     fullscreen = False
     # Set the display mode
-    bestdepth = pg.display.mode_ok(SCREENRECT.size, 32, 32)
-    screen = pg.display.set_mode(SCREENRECT.size, 32, bestdepth)
+    best_depth = pg.display.mode_ok(SCREENRECT.size, 32, 32)
+    screen = pg.display.set_mode(SCREENRECT.size, 32, best_depth)
 
     Player.left_images = [load_image(im) for im in ("link-left1.png", "link-left2.png", "link-left3.png",
                                                     "link-left4.png", "link-left5.png")]
@@ -177,7 +146,7 @@ def main():
     # decorate the game window
     icon = pg.transform.scale(Player.down_images[0], (32, 32))
     pg.display.set_icon(icon)
-    pg.display.set_caption("Pygame Linker")
+    pg.display.set_caption("Zelda Prater")
     pg.mouse.set_visible(False)
 
     # create the background, tile the bgd image
@@ -222,15 +191,23 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 return
+            if event.type == pg.KEYDOWN:
+                if event.key in dir:
+                    v = dir[event.key]
+                    player.move(v)
+            if event.type == pg.KEYUP:
+                if event.key in dir:
+                    v = anti_dir[event.key]
+                    player.move(v)
         keystate = pg.key.get_pressed()
         everyone.clear(screen, background)
         everyone.update()
 
-        direction = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
-        player.move(direction)
+        # direction = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
+        # player.move(direction)
 
         for _ in pg.sprite.spritecollide(player, bricks, False):
-            player.move(-direction)
+            player.kill()
 
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
