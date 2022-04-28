@@ -1,8 +1,14 @@
 import pygame
 import time
+import json
 
 from pygame.locals import *
 from time import sleep
+
+file = open('map.json')
+data = json.load(file)
+# Showing what is in room
+print(json.dumps(data))
 
 
 class Model:
@@ -11,9 +17,12 @@ class Model:
         self.dest_y = 0
         self.character = Character(0, 0)
         self.sprites = []
-        # self.lettuce = Lettuce(500, 500)
-        # self.sprites.append(self.lettuce)
         self.sprites.append(self.character)
+        self.activeRoom = "R0"
+        self.roomJson = data["rooms"]
+        self.rooms = []
+        for i in range(len(self.roomJson)):
+            self.rooms.append(self.roomJson[i])
 
     def update(self):
         if self.rect.left < self.dest_x:
