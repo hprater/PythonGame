@@ -199,29 +199,24 @@ def main():
                 if event.key in dir:
                     v = anti_dir[event.key]
                     player.move(v)
-        keystate = pg.key.get_pressed()
         everyone.clear(screen, background)
         everyone.update()
 
-        # direction = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
-        # player.move(direction)
-
         for _ in pg.sprite.spritecollide(player, bricks, False):
-            player.kill()
+            player.move((0, 0))
 
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
 
         for pot in pg.sprite.groupcollide(pots, bricks, True, False).keys():
             BrokenPot(pot)
-            pass
 
         # draw the scene
         dirty = everyone.draw(screen)
         pg.display.update(dirty)
 
-        # cap the framerate at 40fps. Also called 40HZ or 40 times per second.
-        clock.tick(40)
+        # cap the framerate at 60fps.
+        clock.tick(60)
 
     pg.time.wait(2000)
 
