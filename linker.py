@@ -63,6 +63,7 @@ class Player(pg.sprite.Sprite):
     left_images = []
     up_images = []
     down_images = []
+    current_direction = None
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self, self.containers)
@@ -77,6 +78,7 @@ class Player(pg.sprite.Sprite):
             self.facing = direction
         self.rect.move_ip(direction * self.speed, 0)
         self.rect = self.rect.clamp(SCREENRECT)
+        self.current_direction = direction
         if direction < 0:
             self.image = self.down_images[0]
         elif direction > 0:
@@ -95,33 +97,46 @@ class Brick(pg.sprite.Sprite):
         self.frame = 0
 
     def update(self):
-        self.frame = self.frame + 1
+        pass
 
 
 class BrokenPot(pg.sprite.Sprite):
-    defaultlife = 12
-    animcycle = 3
+    default_life = 20
     images = []
 
     def __init__(self, actor):
         pg.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
-        self.life = self.defaultlife
+        self.life = self.default_life
 
     def update(self):
-        """called every time around the game loop.
-        Show the explosion surface for 'defaultlife'.
-        Every game tick(update), we decrease the 'life'.
-        Also we animate the explosion.
-        """
         self.life = self.life - 1
-        self.image = self.images[self.life // self.animcycle % 2]
         if self.life <= 0:
             self.kill()
 
 
 class Pot(pg.sprite.Sprite):
+    speed = 7
+    images = []
+    direction = None
+
+    def __init__(self, x, y):
+        pg.sprite.Sprite.__init__(self, self.containers)
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.frame = 0
+
+    def update(self):
+        if self.direction is not None:
+            self.rect.move_ip(self.direction * self.speed, 0)
+            self.rect = self.rect.clamp(SCREENRECT)
+
+    def move(self, direction):
+        self.direction = direction
+
+
+class Boomerang(pg.sprite.Sprite):
     animcycle = 3
     images = []
 
@@ -131,9 +146,9 @@ class Pot(pg.sprite.Sprite):
         self.rect = self.image.get_rect(center=actor.rect.center)
 
     def update(self):
-        self.image = self.images[self.life // self.animcycle % 2]
-        if self.life <= 0:
-            self.kill()
+        if self.direction is not None:
+            self.rect.move_ip(self.direction * self.speed, 0)
+            self.rect = self.rect.clamp(SCREENRECT)
 
 
 def main():
@@ -142,9 +157,8 @@ def main():
 
     fullscreen = False
     # Set the display mode
-    winstyle = 32  # |FULLSCREEN
-    bestdepth = pg.display.mode_ok(SCREENRECT.size, winstyle, 32)
-    screen = pg.display.set_mode(SCREENRECT.size, winstyle, bestdepth)
+    bestdepth = pg.display.mode_ok(SCREENRECT.size, 32, 32)
+    screen = pg.display.set_mode(SCREENRECT.size, 32, bestdepth)
 
     Player.left_images = [load_image(im) for im in ("link-left1.png", "link-left2.png", "link-left3.png",
                                                     "link-left4.png", "link-left5.png")]
@@ -154,11 +168,11 @@ def main():
                                                   "link-up4.png", "link-up5.png")]
     Player.down_images = [load_image(im) for im in ("link-down1.png", "link-down2.png", "link-down3.png",
                                                     "link-down4.png", "link-down5.png")]
-    im = load_image("brick.png")
-    Brick.images = [im]
-    # Alien.images = [load_image(im) for im in ("alien1.gif", "alien2.gif", "alien3.gif")]
-    # Bomb.images = [load_image("bomb.gif")]
-    # Shot.images = [load_image("shot.gif")]
+    Brick.images = [load_image("brick.png")]
+    Boomerang.images = [load_image(im) for im in ("boomerang1.png", "boomerang2.png", "boomerang3.png",
+                                                  "boomerang4.png")]
+    Pot.images = [load_image("pot.png")]
+    BrokenPot.images = [load_image("pot_broken.png")]
 
     # decorate the game window
     icon = pg.transform.scale(Player.down_images[0], (32, 32))
@@ -169,26 +183,25 @@ def main():
     # create the background, tile the bgd image
     background = pg.Surface(SCREENRECT.size)
     color = (0, 200, 100)
-    background.fill("darkgrey")
+    background.fill(color)
     screen.blit(background, SCREENRECT)
     pg.display.flip()
 
     # Initialize Game Groups
     bricks = pg.sprite.Group()
     pots = pg.sprite.Group()
-    # boomerangs = pg.sprite.Group()
+    boomerangs = pg.sprite.Group()
     everyone = pg.sprite.RenderUpdates()
 
     # assign default groups to each sprite class
     Player.containers = everyone
     Brick.containers = bricks, everyone
     Pot.containers = pots, everyone
-    # Boomerang.containers = boomerangs, everyone
-    # BrokenPot.containers = everyone
+    Boomerang.containers = boomerangs, everyone
+    BrokenPot.containers = everyone
 
     # Create Some Starting Values
     # global score
-    # alienreload = ALIEN_RELOAD
     clock = pg.time.Clock()
 
     # initialize our starting sprites
@@ -196,39 +209,35 @@ def main():
     player = Player()
     Brick(0, 0)  # note, this 'lives' because it goes into a sprite group
     Brick(0, 50)  # note, this 'lives' because it goes into a sprite group
-    Brick(50, 0)  # note, this 'lives' because it goes into a sprite group
+    Brick(0, 100)  # note, this 'lives' because it goes into a sprite group
+    Brick(750, 0)  # note, this 'lives' because it goes into a sprite group
+    Brick(750, 50)  # note, this 'lives' because it goes into a sprite group
+    Brick(750, 100)  # note, this 'lives' because it goes into a sprite group
+    Pot(200, 75)
 
     # Run our main loop whilst the player is alive.
     while player.alive():
-
-        # get input
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 return
-
         keystate = pg.key.get_pressed()
-
-        # clear/erase the last drawn sprites
         everyone.clear(screen, background)
-
-        # update all the sprites
         everyone.update()
 
-        # handle player input
         direction = keystate[pg.K_RIGHT] - keystate[pg.K_LEFT]
         player.move(direction)
 
-        # Detect collisions between bricks and player.
         for _ in pg.sprite.spritecollide(player, bricks, False):
             player.move(-direction)
 
-        # See if alien boms hit the player.
-        # for bomb in pg.sprite.spritecollide(player, bombs, 1):
-        #     Explosion(player)
-        #     Explosion(bomb)
-        #     player.kill()
+        for pot in pg.sprite.spritecollide(player, pots, False):
+            pot.move(player.current_direction)
+
+        for pot in pg.sprite.groupcollide(pots, bricks, True, False).keys():
+            BrokenPot(pot)
+            pass
 
         # draw the scene
         dirty = everyone.draw(screen)
