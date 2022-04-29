@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 import json
-import random
 import os
 
 import pygame as pg
-from pygame import K_LEFT, K_RIGHT, K_UP, K_DOWN
+from pygame.locals import *
 
 if not pg.image.get_extended():
     raise SystemExit("Sorry, extended image module required")
 
 # game constants
-SCREENRECT = pg.Rect(0, 0, 800, 600)
+SCREEN_RECT = pg.Rect(0, 0, 800, 600)
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 dir = {K_LEFT: (-1, 0), K_RIGHT: (1, 0), K_UP: (0, -1), K_DOWN: (0, 1)}
@@ -61,7 +60,7 @@ class Player(pg.sprite.Sprite):
 
     def update(self):
         self.rect.move_ip(self.current_direction[0] * self.speed, self.current_direction[1] * self.speed)
-        self.rect = self.rect.clamp(SCREENRECT)
+        self.rect = self.rect.clamp(SCREEN_RECT)
 
     def move(self, direction):
         self.current_direction = (self.current_direction[0] + direction[0], self.current_direction[1] + direction[1])
@@ -82,14 +81,13 @@ class Brick(pg.sprite.Sprite):
 
 
 class BrokenPot(pg.sprite.Sprite):
-    default_life = 20
     images = []
 
     def __init__(self, actor):
         pg.sprite.Sprite.__init__(self, self.containers)
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
-        self.life = self.default_life
+        self.life = 20
 
     def update(self):
         self.life = self.life - 1
@@ -111,7 +109,7 @@ class Pot(pg.sprite.Sprite):
     def update(self):
         if self.direction is not None:
             self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
-            self.rect = self.rect.clamp(SCREENRECT)
+            self.rect = self.rect.clamp(SCREEN_RECT)
 
     def move(self, direction):
         self.direction = direction
@@ -129,7 +127,7 @@ class Boomerang(pg.sprite.Sprite):
     def update(self):
         if self.direction is not None:
             self.rect.move_ip(self.direction * self.speed, 0)
-            self.rect = self.rect.clamp(SCREENRECT)
+            self.rect = self.rect.clamp(SCREEN_RECT)
 
 
 def main():
@@ -138,8 +136,8 @@ def main():
 
     fullscreen = False
     # Set the display mode
-    best_depth = pg.display.mode_ok(SCREENRECT.size, 32, 32)
-    screen = pg.display.set_mode(SCREENRECT.size, 32, best_depth)
+    best_depth = pg.display.mode_ok(SCREEN_RECT.size, 32, 32)
+    screen = pg.display.set_mode(SCREEN_RECT.size, 32, best_depth)
 
     Player.left_images = [load_image(im) for im in ("link-left1.png", "link-left2.png", "link-left3.png",
                                                     "link-left4.png", "link-left5.png")]
@@ -162,10 +160,10 @@ def main():
     pg.mouse.set_visible(False)
 
     # create the background, tile the bgd image
-    background = pg.Surface(SCREENRECT.size)
+    background = pg.Surface(SCREEN_RECT.size)
     color = (0, 200, 100)
     background.fill(color)
-    screen.blit(background, SCREENRECT)
+    screen.blit(background, SCREEN_RECT)
     pg.display.flip()
 
     # Initialize Game Groups
@@ -188,7 +186,7 @@ def main():
 
     # initialize our starting sprites
     # global SCORE
-    load_room(0)
+    load_room(2)
     player = Player()
 
     # Run our main loop whilst the player is alive.
