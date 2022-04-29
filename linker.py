@@ -171,6 +171,7 @@ def main():
     # Initialize Game Groups
     bricks = pg.sprite.Group()
     pots = pg.sprite.Group()
+    broken = pg.sprite.Group()
     boomerangs = pg.sprite.Group()
     everyone = pg.sprite.RenderUpdates()
 
@@ -179,7 +180,7 @@ def main():
     Brick.containers = bricks, everyone
     Pot.containers = pots, everyone
     Boomerang.containers = boomerangs, everyone
-    BrokenPot.containers = everyone
+    BrokenPot.containers = everyone, broken
 
     # Create Some Starting Values
     # global score
@@ -189,7 +190,6 @@ def main():
     # global SCORE
     load_map()
     player = Player()
-    Pot(200, 75)
 
     # Run our main loop whilst the player is alive.
     while player.alive():
@@ -212,6 +212,9 @@ def main():
         for _ in pg.sprite.spritecollide(player, bricks, False):
             player.current_direction = (0, 0)
 
+        for _ in pg.sprite.spritecollide(player, broken, False):
+            player.current_direction = (0, 0)
+
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
 
@@ -223,7 +226,7 @@ def main():
         pg.display.update(dirty)
 
         # cap the framerate at 60fps.
-        clock.tick(60)
+        clock.tick(40)
 
     pg.time.wait(2000)
 
