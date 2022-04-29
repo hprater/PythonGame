@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import json
 import random
 import os
 
@@ -18,7 +18,6 @@ anti_dir = {K_LEFT: (1, 0), K_RIGHT: (-1, 0), K_UP: (0, 1), K_DOWN: (0, -1)}
 
 
 def load_image(file):
-    """loads an image, prepares it for play"""
     file = os.path.join(main_dir, "images", file)
     try:
         surface = pg.image.load(file).convert()
@@ -26,6 +25,19 @@ def load_image(file):
         raise SystemExit('Could not load image "%s" %s' % (file, pg.get_error()))
     surface.set_colorkey([0, 0, 0])
     return surface.convert()
+
+
+def load_map():
+    file = open(os.path.join(main_dir, 'map.json'))
+    try:
+        data = json.load(file)
+    except pg.error:
+        raise SystemExit('Could not load data "%s" %s' % (file, pg.get_error()))
+    # print(data["rooms"][0]["bricks"])
+    for brick in data["rooms"][0]["bricks"]:
+        Brick(brick["x"], brick["y"])
+    for pot in data["rooms"][0]["pots"]:
+        Pot(pot["x"], pot["y"])
 
 
 class Player(pg.sprite.Sprite):
@@ -175,13 +187,8 @@ def main():
 
     # initialize our starting sprites
     # global SCORE
+    load_map()
     player = Player()
-    Brick(0, 0)  # note, these 'live' because it goes into a sprite group
-    Brick(0, 50)
-    Brick(0, 100)
-    Brick(750, 0)
-    Brick(750, 50)
-    Brick(750, 100)
     Pot(200, 75)
 
     # Run our main loop whilst the player is alive.
@@ -208,7 +215,7 @@ def main():
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
 
-        for pot in pg.sprite.groupcollide(pots, bricks, True, False).keys():
+        for pot in pg.sprite.groupcollide(pots, bricks, True, False):
             BrokenPot(pot)
 
         # draw the scene
