@@ -27,16 +27,16 @@ def load_image(file):
     return surface.convert()
 
 
-def load_map():
+def load_room(room):
     file = open(os.path.join(main_dir, 'map.json'))
     try:
         data = json.load(file)
     except pg.error:
         raise SystemExit('Could not load data "%s" %s' % (file, pg.get_error()))
-    # print(data["rooms"][0]["bricks"])
-    for brick in data["rooms"][0]["bricks"]:
+    print('Room : %s' % data["rooms"][room]["name"])
+    for brick in data["rooms"][room]["bricks"]:
         Brick(brick["x"], brick["y"])
-    for pot in data["rooms"][0]["pots"]:
+    for pot in data["rooms"][room]["pots"]:
         Pot(pot["x"], pot["y"])
 
 
@@ -171,6 +171,7 @@ def main():
     # Initialize Game Groups
     bricks = pg.sprite.Group()
     pots = pg.sprite.Group()
+    broken = pg.sprite.Group()
     boomerangs = pg.sprite.Group()
     everyone = pg.sprite.RenderUpdates()
 
@@ -179,7 +180,7 @@ def main():
     Brick.containers = bricks, everyone
     Pot.containers = pots, everyone
     Boomerang.containers = boomerangs, everyone
-    BrokenPot.containers = everyone
+    BrokenPot.containers = everyone, broken
 
     # Create Some Starting Values
     # global score
@@ -187,9 +188,8 @@ def main():
 
     # initialize our starting sprites
     # global SCORE
-    load_map()
+    load_room(0)
     player = Player()
-    Pot(200, 75)
 
     # Run our main loop whilst the player is alive.
     while player.alive():
@@ -212,18 +212,22 @@ def main():
         for _ in pg.sprite.spritecollide(player, bricks, False):
             player.current_direction = (0, 0)
 
+        for _ in pg.sprite.spritecollide(player, broken, False):
+            player.current_direction = (0, 0)
+
         for pot in pg.sprite.spritecollide(player, pots, False):
             pot.move(player.current_direction)
 
         for pot in pg.sprite.groupcollide(pots, bricks, True, False):
+            print('Pot X=%3d Y=%3d' % (pot.rect.x, pot.rect.y))
             BrokenPot(pot)
 
         # draw the scene
         dirty = everyone.draw(screen)
         pg.display.update(dirty)
 
-        # cap the framerate at 60fps.
-        clock.tick(60)
+        # cap the framerate at 30fps.
+        clock.tick(30)
 
     pg.time.wait(2000)
 
