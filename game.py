@@ -30,13 +30,14 @@ class View:
     def __init__(self, model):
         screen_size = (800, 600)
         self.screen = pg.display.set_mode(screen_size, 32)  # main pygame surface
-        self.character_image = load_image("link-down1.png")
         self.model = model
-        self.model.rect = self.character_image.get_rect()
+        # self.model.rect = self.character_image.get_rect()
 
     def update(self):
         self.screen.fill([0, 200, 100])
-        self.screen.blit(self.character_image, self.model.rect)
+        # self.screen.blit(self.character_image, self.model.rect)
+        dirty = self.model.everyone.draw(self.screen)
+        pg.display.update(dirty)
         pg.display.flip()
 
 
@@ -79,6 +80,7 @@ class Model:
                                                          "link-up4.png", "link-up5.png")]
         Character.down_images = [load_image(im) for im in ("link-down1.png", "link-down2.png", "link-down3.png",
                                                            "link-down4.png", "link-down5.png")]
+        Character.images.append(Character.down_images[0])
         Brick.images = [load_image("brick.png")]
         Boomerang.images = [load_image(im) for im in ("boomerang1.png", "boomerang2.png", "boomerang3.png",
                                                       "boomerang4.png")]
@@ -89,21 +91,20 @@ class Model:
         pots = pg.sprite.Group()
         broken = pg.sprite.Group()
         boomerangs = pg.sprite.Group()
-        everyone = pg.sprite.RenderUpdates()
+        self.everyone = pg.sprite.RenderUpdates()
 
         # assign default groups to each sprite class
-        Character.containers = everyone
-        Brick.containers = bricks, everyone
-        Pot.containers = pots, everyone
-        Boomerang.containers = boomerangs, everyone
-        BrokenPot.containers = everyone, broken
+        Character.containers = self.everyone
+        Brick.containers = bricks, self.everyone
+        Pot.containers = pots, self.everyone
+        Boomerang.containers = boomerangs, self.everyone
+        BrokenPot.containers = self.everyone, broken
 
-        for room in map_json["rooms"]:
-            self.rooms[room["name"]] = Room(room)
-        self.activeRoom = self.rooms[map_json["activeRoom"]]
-        self.dest_x = 0
-        self.dest_y = 0
-        self.character = Character(0, 0)
+        # for room in map_json["rooms"][0]:
+        #     self.rooms[room["name"]] = Room(room)
+        # self.activeRoom = self.rooms[map_json["activeRoom"]]
+        self.activeRoom = Room(map_json["rooms"][0])
+        self.character = Character(75, 75)
 
         # def wireRooms():
         #     self.theRooms = self.rooms
@@ -132,10 +133,6 @@ class Model:
         for sprite in self.activeRoom.sprites:
             sprite.update()
 
-    def set_dest(self, pos):
-        self.dest_x = pos[0]
-        self.dest_y = pos[1]
-
 
 class Room:
     sprites = []
@@ -154,9 +151,12 @@ class Sprite(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, self.containers)
         self.x = x_pos
         self.y = y_pos
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(topleft=(x_pos, y_pos))
 
 
 class Character(Sprite):
+
     def __init__(self, x_pos, y_pos):
         super().__init__(x_pos, y_pos)
 

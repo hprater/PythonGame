@@ -134,7 +134,6 @@ def main():
     # Initialize pygame
     pg.init()
 
-    fullscreen = False
     # Set the display mode
     best_depth = pg.display.mode_ok(SCREEN_RECT.size, 32, 32)
     screen = pg.display.set_mode(SCREEN_RECT.size, 32, best_depth)
