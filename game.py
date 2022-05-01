@@ -11,18 +11,31 @@ from time import sleep
 
 # Game constant
 SCREEN_RECT = pg.Rect(0, 0, 800, 600)
+# 1 = right, 2 = left, 3 = down, 4 = up
+ROOM_RIGHT = 1
+ROOM_LEFT = 2
+ROOM_DOWN = 3
+ROOM_UP = 4
+R0 = {ROOM_RIGHT: "R1", ROOM_DOWN: "R2"}
+R1 = {ROOM_LEFT: "R0"}
+R2 = {ROOM_DOWN: "R3", ROOM_UP: "R0"}
+R3 = {ROOM_RIGHT: "R4", ROOM_UP: "R2"}
+R4 = {ROOM_LEFT: "R3"}
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
 
 
-def load_image(file):
-    file = os.path.join(main_dir, "images", file)
+def load_image(file_name, size):
+    image_file = os.path.join(main_dir, "images", file_name)
     try:
         # pygame optimized image with convert (but removes transparency)
-        surface = pg.image.load(file).convert()
+        image = pg.image.load(image_file)
+        if size is not None:
+            image = pg.transform.scale(image, size)
+        surface = image.convert()
     except pg.error:
-        raise SystemExit('Could not load image "%s" %s' % (file, pg.get_error()))
-    surface.set_colorkey([0, 0, 0])
+        raise SystemExit('Could not load image "%s" %s' % (image_file, pg.get_error()))
+    surface.set_colorkey([0, 0, 0])  # sets color to skip rendering (simulates transparency)
     return surface.convert()
 
 
@@ -47,23 +60,46 @@ class Controller:
         self.keep_going = True
 
     def update(self):
-        for event in pg.event.get():
-            if event.type == QUIT:
-                self.keep_going = False
-            elif event.type == KEYDOWN:
-                if event.key == K_ESCAPE:
-                    self.keep_going = False
-            elif event.type == pg.MOUSEBUTTONUP:
-                self.model.set_dest(pg.mouse.get_pos())
         keys = pg.key.get_pressed()
+        move = (0, 0)
         if keys[K_LEFT]:
-            self.model.dest_x -= 1
+            move = (move[0] - 1, move[1])
         if keys[K_RIGHT]:
-            self.model.dest_x += 1
+            move = (move[0] + 1, move[1])
         if keys[K_UP]:
-            self.model.dest_y -= 1
+            move = (move[0], move[1] - 1)
         if keys[K_DOWN]:
-            self.model.dest_y += 1
+            move = (move[0], move[1] + 1)
+        self.model.character.move(move)
+        for event in pg.event.get():
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                self.keep_going = False
+            if event.type == KEYDOWN and (event.key == K_RCTRL or event.key == K_LCTRL):
+                self.model.create_boomerang(move)
+        if self.model.character.rect.top == SCREEN_RECT.top:
+            self.model.change_room(ROOM_UP)
+        elif self.model.character.rect.bottom == SCREEN_RECT.bottom:
+            self.model.change_room(ROOM_DOWN)
+        elif self.model.character.rect.right == SCREEN_RECT.right:
+            self.model.change_room(ROOM_RIGHT)
+        elif self.model.character.rect.left == SCREEN_RECT.left:
+            self.model.change_room(ROOM_LEFT)
+        for pot in pg.sprite.spritecollide(self.model.character, self.model.pots, False):
+            pot.move(move)
+        for _ in pg.sprite.spritecollide(self.model.character, self.model.bricks, False):
+            move = (-move[0], -move[1])
+            self.model.character.move(move)
+            move = (0, 0)
+        for pot in pg.sprite.groupcollide(self.model.pots, self.model.bricks, True, False):
+            self.model.create_broken_pot(pot)
+        for pot in pg.sprite.groupcollide(self.model.pots, self.model.boomerangs, True, True):
+            self.model.create_broken_pot(pot)
+        for _ in pg.sprite.groupcollide(self.model.boomerangs, self.model.bricks, True, False):
+            pass
+        for _ in pg.sprite.spritecollide(self.model.character, self.model.broken, False):
+            move = (-move[0], -move[1])
+            self.model.character.move(move)
+            move = (0, 0)
 
 
 class Model:
@@ -72,72 +108,91 @@ class Model:
 
     def __init__(self, map_json):
         # Preload the images, so we aren't doing it for every instance of the class.
-        Character.left_images = [load_image(im) for im in ("link-left1.png", "link-left2.png", "link-left3.png",
-                                                           "link-left4.png", "link-left5.png")]
-        Character.right_images = [load_image(im) for im in ("link-right1.png", "link-right2.png", "link-right3.png",
-                                                            "link-right4.png", "link-right5.png")]
-        Character.up_images = [load_image(im) for im in ("link-up1.png", "link-up2.png", "link-up3.png",
-                                                         "link-up4.png", "link-up5.png")]
-        Character.down_images = [load_image(im) for im in ("link-down1.png", "link-down2.png", "link-down3.png",
-                                                           "link-down4.png", "link-down5.png")]
+        Character.left_images = [load_image(im, (49, 49)) for im in
+                                 ("link-left1.png", "link-left2.png", "link-left3.png",
+                                  "link-left4.png", "link-left5.png")]
+        Character.right_images = [load_image(im, (49, 49)) for im in
+                                  ("link-right1.png", "link-right2.png", "link-right3.png",
+                                   "link-right4.png", "link-right5.png")]
+        Character.up_images = [load_image(im, (49, 49)) for im in ("link-up1.png", "link-up2.png", "link-up3.png",
+                                                                   "link-up4.png", "link-up5.png")]
+        Character.down_images = [load_image(im, (49, 49)) for im in
+                                 ("link-down1.png", "link-down2.png", "link-down3.png",
+                                  "link-down4.png", "link-down5.png")]
         Character.images.append(Character.down_images[0])
-        Brick.images = [load_image("brick.png")]
-        Boomerang.images = [load_image(im) for im in ("boomerang1.png", "boomerang2.png", "boomerang3.png",
-                                                      "boomerang4.png")]
-        Pot.images = [load_image("pot.png")]
-        BrokenPot.images = [load_image("pot_broken.png")]
+        Brick.images = [load_image("brick.png", (50, 50))]
+        Boomerang.images = [load_image(im, None) for im in ("boomerang1.png", "boomerang2.png", "boomerang3.png",
+                                                            "boomerang4.png")]
+        Pot.images = [load_image("pot.png", (50, 50))]
+        BrokenPot.images = [load_image("pot_broken.png", (50, 50))]
         # Initialize Game Groups
-        bricks = pg.sprite.Group()
-        pots = pg.sprite.Group()
-        broken = pg.sprite.Group()
-        boomerangs = pg.sprite.Group()
+        self.bricks = pg.sprite.Group()
+        self.pots = pg.sprite.Group()
+        self.broken = pg.sprite.Group()
+        self.boomerangs = pg.sprite.Group()
         self.everyone = pg.sprite.RenderUpdates()
 
         # assign default groups to each sprite class
         Character.containers = self.everyone
-        Brick.containers = bricks, self.everyone
-        Pot.containers = pots, self.everyone
-        Boomerang.containers = boomerangs, self.everyone
-        BrokenPot.containers = self.everyone, broken
+        Brick.containers = self.bricks, self.everyone
+        Pot.containers = self.pots, self.everyone
+        Boomerang.containers = self.boomerangs, self.everyone
+        BrokenPot.containers = self.everyone, self.broken
 
-        # for room in map_json["rooms"][0]:
-        #     self.rooms[room["name"]] = Room(room)
-        # self.activeRoom = self.rooms[map_json["activeRoom"]]
-        self.activeRoom = Room(map_json["rooms"][0])
+        for room in map_json["rooms"]:
+            self.rooms[room["name"]] = room
+        self.activeRoom = Room(self.rooms[map_json["activeRoom"]])
         self.character = Character(75, 75)
-
-        # def wireRooms():
-        #     self.theRooms = self.rooms
-        #     self.rooms.forEach(function(value, key)
-        #     switch(key)
-        #     case"R0":
-        #         value.connectingRooms.set("right", theRooms.get("R1"));
-        #         value.connectingRooms.set("down", theRooms.get("R2"));
-        #         break;
-        #     case"R1":
-        #         value.connectingRooms.set("left", theRooms.get("R0"));
-        #         break;
-        #     case "R2":
-        #         value.connectingRooms.set("up", theRooms.get("R0"));
-        #         value.connectingRooms.set("down", theRooms.get("R3"));
-        #         break;
-        #     case"R3":
-        #         value.connectingRooms.set("up", theRooms.get("R2"));
-        #         value.connectingRooms.set("right", theRooms.get("R4"));
-        #         break;
-        #     case"R4":
-        #         value.connectingRooms.set("left", theRooms.get("R3"));
-        #         break;
 
     def update(self):
         for sprite in self.activeRoom.sprites:
             sprite.update()
 
+    def create_broken_pot(self, actor):
+        self.activeRoom.sprites.append(BrokenPot(actor))
+
+    def create_boomerang(self, direction):
+        self.activeRoom.sprites.append(Boomerang(self.character, self.character.last_move))
+
+    def change_room(self, direction):
+        if self.activeRoom.name == "R0":
+            if direction in R0:
+                new_room_name = R0[direction]
+        elif self.activeRoom.name == "R1":
+            if direction in R1:
+                new_room_name = R1[direction]
+        elif self.activeRoom.name == "R2":
+            if direction in R2:
+                new_room_name = R2[direction]
+        elif self.activeRoom.name == "R3":
+            if direction in R3:
+                new_room_name = R3[direction]
+        elif self.activeRoom.name == "R4":
+            if direction in R4:
+                new_room_name = R4[direction]
+        else:
+            return
+        for sprite in self.activeRoom.sprites:
+            if sprite != self.character:
+                sprite.kill()
+        print('New Room : %s' % self.rooms[new_room_name]["name"])
+        self.activeRoom = Room(self.rooms[new_room_name])
+        if direction == ROOM_RIGHT:
+            self.character.rect.left = SCREEN_RECT.left
+        elif direction == ROOM_LEFT:
+            self.character.rect.right = SCREEN_RECT.right
+        elif direction == ROOM_DOWN:
+            self.character.rect.top = SCREEN_RECT.top
+        elif direction == ROOM_UP:
+            self.character.rect.bottom = SCREEN_RECT.bottom
+
 
 class Room:
+    name = None
     sprites = []
 
     def __init__(self, room_json):
+        self.name = room_json["name"]
         for brick in room_json["bricks"]:
             self.sprites.append(Brick(brick["x"], brick["y"]))
         for pot in room_json["pots"]:
@@ -156,12 +211,22 @@ class Sprite(pg.sprite.Sprite):
 
 
 class Character(Sprite):
+    speed = 5
+    last_move = (1, 0)
+    animation_frames = 0
+    animation_change = 4
 
     def __init__(self, x_pos, y_pos):
         super().__init__(x_pos, y_pos)
 
     def update(self):
         pass
+
+    def move(self, direction):
+        if direction != (0, 0):
+            self.last_move = direction
+        self.rect.move_ip(direction[0] * self.speed, direction[1] * self.speed)
+        self.rect = self.rect.clamp(SCREEN_RECT)
 
 
 class Brick(Sprite):
@@ -173,16 +238,26 @@ class Brick(Sprite):
 
 
 class Pot(Sprite):
+    speed = 7
+    direction = None
+
     def __init__(self, x_pos, y_pos):
         super().__init__(x_pos, y_pos)
 
     def update(self):
-        pass
+        if self.direction is not None:
+            self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
+            self.rect = self.rect.clamp(SCREEN_RECT)
+
+    def move(self, direction):
+        self.direction = direction
 
 
 class BrokenPot(Sprite):
+    containers = []
+
     def __init__(self, actor):
-        super.__init__(actor.rect.x, actor.rect.y)
+        super().__init__(actor.rect.x, actor.rect.y)
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = 20
@@ -194,18 +269,20 @@ class BrokenPot(Sprite):
 
 
 class Boomerang(Sprite):
-    speed = 15
+    speed = 9
+    direction = (0, 0)
 
-    def __init__(self, actor):
+    def __init__(self, actor, movement):
         pg.sprite.Sprite.__init__(self, self.containers)
-        self.image = self.images[0]
+        self.image = self.images[1]  #
         self.rect = self.image.get_rect(center=actor.rect.center)
-        self.direction = actor.direction
+        self.direction = movement
 
     def update(self):
-        if self.direction is not None:
-            self.rect.move_ip(self.direction * self.speed, 0)
-            self.rect = self.rect.clamp(SCREEN_RECT)
+        self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
+        if self.rect.top == SCREEN_RECT.top or self.rect.bottom == SCREEN_RECT.bottom \
+                or self.rect.right == SCREEN_RECT.right or self.rect.left == SCREEN_RECT.left:
+            self.kill()
 
 
 print("Use the arrow keys to move. Press Esc to quit.")

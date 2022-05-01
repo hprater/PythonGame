@@ -16,8 +16,8 @@ dir = {K_LEFT: (-1, 0), K_RIGHT: (1, 0), K_UP: (0, -1), K_DOWN: (0, 1)}
 anti_dir = {K_LEFT: (1, 0), K_RIGHT: (-1, 0), K_UP: (0, 1), K_DOWN: (0, -1)}
 
 
-def load_image(file):
-    file = os.path.join(main_dir, "images", file)
+def load_image(file_n):
+    file = os.path.join(main_dir, "images", file_n)
     try:
         surface = pg.image.load(file).convert()
     except pg.error:
