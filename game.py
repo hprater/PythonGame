@@ -143,6 +143,7 @@ class Model:
             self.rooms[room["name"]] = room
         self.activeRoom = Room(self.rooms[map_json["activeRoom"]])
         self.character = Character(75, 75)
+        self.activeRoom.sprites.append(self.character)
 
     def update(self):
         for sprite in self.activeRoom.sprites:
@@ -211,20 +212,38 @@ class Sprite(pg.sprite.Sprite):
 
 
 class Character(Sprite):
+    left_images = None
+    up_images = None
+    right_images = None
+    down_images = None
     speed = 5
     last_move = (1, 0)
+    current_direction = (0, 0)
     animation_frames = 0
-    animation_change = 4
+    ANIMATION_MAX = 12
+    ANIMATION_DIVISOR = 3
 
     def __init__(self, x_pos, y_pos):
         super().__init__(x_pos, y_pos)
 
     def update(self):
-        pass
+        if self.animation_frames < self.ANIMATION_MAX:
+            self.animation_frames += 1
+        else:
+            self.animation_frames = 0
+        if self.current_direction[0] > 0:
+            self.image = Character.right_images[self.animation_frames//self.ANIMATION_DIVISOR]
+        elif self.current_direction[0] < 0:
+            self.image = Character.left_images[self.animation_frames//self.ANIMATION_DIVISOR]
+        elif self.current_direction[1] > 0:
+            self.image = Character.down_images[self.animation_frames//self.ANIMATION_DIVISOR]
+        elif self.current_direction[1] < 0:
+            self.image = Character.up_images[self.animation_frames//self.ANIMATION_DIVISOR]
 
     def move(self, direction):
         if direction != (0, 0):
             self.last_move = direction
+        self.current_direction = direction
         self.rect.move_ip(direction[0] * self.speed, direction[1] * self.speed)
         self.rect = self.rect.clamp(SCREEN_RECT)
 
