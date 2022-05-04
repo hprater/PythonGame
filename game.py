@@ -297,8 +297,8 @@ class Boomerang(Sprite):
     speed = 9
     direction = (0, 0)
     animation_frames_b = 0
-    ANIMATION_MAX_B = 9
-    ANIMATION_DIVISOR_B = 3
+    ANIMATION_MAX_B = 6
+    ANIMATION_DIVISOR_B = 2
 
     def __init__(self, actor, movement):
         pg.sprite.Sprite.__init__(self, self.containers)
