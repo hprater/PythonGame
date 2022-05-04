@@ -9,11 +9,6 @@ import os
 from pygame.locals import *
 from time import sleep
 
-# Sound effects
-pg.mixer.init()
-break_sound = pg.mixer.Sound("sound/glass_shatter_c.wav")
-boomerang_sound = pg.mixer.Sound("sound/golf_swing.wav")
-
 # Game constant
 SCREEN_RECT = pg.Rect(0, 0, 800, 600)
 # 1 = right, 2 = left, 3 = down, 4 = up
@@ -28,6 +23,11 @@ R3 = {ROOM_RIGHT: "R4", ROOM_UP: "R2"}
 R4 = {ROOM_LEFT: "R3"}
 
 main_dir = os.path.split(os.path.abspath(__file__))[0]
+
+# Sound effects
+pg.mixer.init()
+break_sound = pg.mixer.Sound(os.path.join(main_dir, "sound", "glass_shatter_c.wav"))
+boomerang_sound = pg.mixer.Sound(os.path.join(main_dir, "sound", "golf_swing.wav"))
 
 
 def load_image(file_name, size):
@@ -285,7 +285,7 @@ class BrokenPot(Sprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = 20
-        pg.mixer.Sound.play(break_sound)
+        break_sound.play()
 
     def update(self):
         self.life = self.life - 1
@@ -305,7 +305,7 @@ class Boomerang(Sprite):
         self.image = self.images[1]  #
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.direction = movement
-        pg.mixer.Sound.play(boomerang_sound)
+        boomerang_sound.play()
 
     def update(self):
         if self.rect.top == SCREEN_RECT.top or self.rect.bottom == SCREEN_RECT.bottom \
