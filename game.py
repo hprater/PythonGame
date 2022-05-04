@@ -296,8 +296,9 @@ class BrokenPot(Sprite):
 class Boomerang(Sprite):
     speed = 9
     direction = (0, 0)
-    ANIMATION_MAX = 6
-    ANIMATION_DIVISOR = 2
+    animation_frames_b = 0
+    ANIMATION_MAX_B = 9
+    ANIMATION_DIVISOR_B = 3
 
     def __init__(self, actor, movement):
         pg.sprite.Sprite.__init__(self, self.containers)
@@ -312,6 +313,11 @@ class Boomerang(Sprite):
             self.kill()
         else:
             self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
+        if self.animation_frames_b < self.ANIMATION_MAX_B:
+            self.animation_frames_b += 1
+        else:
+            self.animation_frames_b = 0
+        self.image = Boomerang.images[self.animation_frames_b // self.ANIMATION_DIVISOR_B]
 
 
 print("Use the arrow keys to move. Press Esc to quit.")
