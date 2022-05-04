@@ -13,7 +13,6 @@ from time import sleep
 pg.mixer.init()
 break_sound = pg.mixer.Sound("sound/glass_shatter_c.wav")
 boomerang_sound = pg.mixer.Sound("sound/golf_swing.wav")
-pot_slide = pg.mixer.Sound("sound/slide_whistle_up.wav")
 
 # Game constant
 SCREEN_RECT = pg.Rect(0, 0, 800, 600)
@@ -276,7 +275,6 @@ class Pot(Sprite):
 
     def move(self, direction):
         self.direction = direction
-        pg.mixer.Sound.play(pot_slide)
 
 
 class BrokenPot(Sprite):
