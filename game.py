@@ -11,9 +11,9 @@ from time import sleep
 
 # Sound effects
 pg.mixer.init()
-break_sound = pg.mixer.Sound("glass_shatter_c.wav")
-boomerang_sound = pg.mixer.Sound("golf_swing.wav")
-pot_slide = pg.mixer.Sound("slide_whistle_up.wav")
+break_sound = pg.mixer.Sound("sound/glass_shatter_c.wav")
+boomerang_sound = pg.mixer.Sound("sound/golf_swing.wav")
+pot_slide = pg.mixer.Sound("sound/slide_whistle_up.wav")
 
 # Game constant
 SCREEN_RECT = pg.Rect(0, 0, 800, 600)
