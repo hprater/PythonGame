@@ -9,6 +9,10 @@ import os
 from pygame.locals import *
 from time import sleep
 
+# Sound effects
+pg.mixer.init()
+break_sound = pg.mixer.Sound("glass_shatter_c.wav")
+
 # Game constant
 SCREEN_RECT = pg.Rect(0, 0, 800, 600)
 # 1 = right, 2 = left, 3 = down, 4 = up
@@ -232,13 +236,13 @@ class Character(Sprite):
         else:
             self.animation_frames = 0
         if self.current_direction[0] > 0:
-            self.image = Character.right_images[self.animation_frames//self.ANIMATION_DIVISOR]
+            self.image = Character.right_images[self.animation_frames // self.ANIMATION_DIVISOR]
         elif self.current_direction[0] < 0:
-            self.image = Character.left_images[self.animation_frames//self.ANIMATION_DIVISOR]
+            self.image = Character.left_images[self.animation_frames // self.ANIMATION_DIVISOR]
         elif self.current_direction[1] > 0:
-            self.image = Character.down_images[self.animation_frames//self.ANIMATION_DIVISOR]
+            self.image = Character.down_images[self.animation_frames // self.ANIMATION_DIVISOR]
         elif self.current_direction[1] < 0:
-            self.image = Character.up_images[self.animation_frames//self.ANIMATION_DIVISOR]
+            self.image = Character.up_images[self.animation_frames // self.ANIMATION_DIVISOR]
 
     def move(self, direction):
         if direction != (0, 0):
@@ -280,6 +284,7 @@ class BrokenPot(Sprite):
         self.image = self.images[0]
         self.rect = self.image.get_rect(center=actor.rect.center)
         self.life = 20
+        pg.mixer.Sound.play(break_sound)
 
     def update(self):
         self.life = self.life - 1
@@ -290,6 +295,8 @@ class BrokenPot(Sprite):
 class Boomerang(Sprite):
     speed = 9
     direction = (0, 0)
+    ANIMATION_MAX = 6
+    ANIMATION_DIVISOR = 2
 
     def __init__(self, actor, movement):
         pg.sprite.Sprite.__init__(self, self.containers)
@@ -298,10 +305,11 @@ class Boomerang(Sprite):
         self.direction = movement
 
     def update(self):
-        self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
         if self.rect.top == SCREEN_RECT.top or self.rect.bottom == SCREEN_RECT.bottom \
                 or self.rect.right == SCREEN_RECT.right or self.rect.left == SCREEN_RECT.left:
             self.kill()
+        else:
+            self.rect.move_ip(self.direction[0] * self.speed, self.direction[1] * self.speed)
 
 
 print("Use the arrow keys to move. Press Esc to quit.")
