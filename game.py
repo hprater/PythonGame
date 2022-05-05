@@ -27,7 +27,9 @@ main_dir = os.path.split(os.path.abspath(__file__))[0]
 # Sound effects
 pg.mixer.init()
 break_sound = pg.mixer.Sound(os.path.join(main_dir, "sound", "glass_shatter_c.wav"))
+break_sound.set_volume(.5)
 boomerang_sound = pg.mixer.Sound(os.path.join(main_dir, "sound", "golf_swing.wav"))
+boomerang_sound.set_volume(.75)
 
 
 def load_image(file_name, size):
@@ -81,13 +83,13 @@ class Controller:
                 self.keep_going = False
             if event.type == KEYDOWN and (event.key == K_RCTRL or event.key == K_LCTRL):
                 self.model.create_boomerang(move)
-        if self.model.character.rect.top == SCREEN_RECT.top:
+        if self.model.character.rect.top <= SCREEN_RECT.top:
             self.model.change_room(ROOM_UP)
-        elif self.model.character.rect.bottom == SCREEN_RECT.bottom:
+        elif self.model.character.rect.bottom >= SCREEN_RECT.bottom:
             self.model.change_room(ROOM_DOWN)
-        elif self.model.character.rect.right == SCREEN_RECT.right:
+        elif self.model.character.rect.right >= SCREEN_RECT.right:
             self.model.change_room(ROOM_RIGHT)
-        elif self.model.character.rect.left == SCREEN_RECT.left:
+        elif self.model.character.rect.left <= SCREEN_RECT.left:
             self.model.change_room(ROOM_LEFT)
         for pot in pg.sprite.spritecollide(self.model.character, self.model.pots, False):
             pot.move(move)
@@ -161,21 +163,16 @@ class Model:
         self.activeRoom.sprites.append(Boomerang(self.character, self.character.last_move))
 
     def change_room(self, direction):
-        if self.activeRoom.name == "R0":
-            if direction in R0:
-                new_room_name = R0[direction]
-        elif self.activeRoom.name == "R1":
-            if direction in R1:
-                new_room_name = R1[direction]
-        elif self.activeRoom.name == "R2":
-            if direction in R2:
-                new_room_name = R2[direction]
-        elif self.activeRoom.name == "R3":
-            if direction in R3:
-                new_room_name = R3[direction]
-        elif self.activeRoom.name == "R4":
-            if direction in R4:
-                new_room_name = R4[direction]
+        if self.activeRoom.name == "R0" and direction in R0:
+            new_room_name = R0[direction]
+        elif self.activeRoom.name == "R1" and direction in R1:
+            new_room_name = R1[direction]
+        elif self.activeRoom.name == "R2" and direction in R2:
+            new_room_name = R2[direction]
+        elif self.activeRoom.name == "R3" and direction in R3:
+            new_room_name = R3[direction]
+        elif self.activeRoom.name == "R4" and direction in R4:
+            new_room_name = R4[direction]
         else:
             return
         for sprite in self.activeRoom.sprites:
@@ -250,7 +247,6 @@ class Character(Sprite):
             self.last_move = direction
         self.current_direction = direction
         self.rect.move_ip(direction[0] * self.speed, direction[1] * self.speed)
-        self.rect = self.rect.clamp(SCREEN_RECT)
 
 
 class Brick(Sprite):
